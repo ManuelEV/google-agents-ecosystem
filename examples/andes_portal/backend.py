@@ -4,6 +4,7 @@ Integra al mismo agente desplegado en Agent Runtime (andes_prod) de tres formas:
 
   POST /chat                       chat con streaming (SSE) y sesión persistente por cliente
   POST /tickets/{id}/summary       botón «Resumir con Andi»: una consulta, sesión nueva, respuesta completa
+  POST /tickets/{id}/resolve       tu app orquesta: tres pasos, una sesión por ticket, un paso en paralelo
   POST /events/shipment-delayed    evento (webhook de logística): nadie al frente, user_id de sistema
 
 Correr:   uvicorn andes_portal.backend:app --port 8090
@@ -12,6 +13,7 @@ apunta al archivo de configuración (sin llaves); el SDK lo usa solo.
 Variables: GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION, AGENT_ENGINE_ID, LOGISTICS_WEBHOOK_SECRET.
 """
 
+import asyncio
 import json
 import os
 
@@ -57,15 +59,19 @@ async def new_session(user: dict) -> str:
     return session["id"]
 
 
-async def ask_once(user: dict, message: str) -> str:
-    """Una consulta sin historial: sesión nueva y solo nos quedamos con el último texto del agente."""
-    session_id = await new_session(user)
+async def ask_in_session(user: dict, session_id: str, message: str) -> str:
+    """Un turno más en una sesión existente; devuelve el último texto del agente."""
     final = ""
     async for ev in andi.async_stream_query(user_id=user["customer_id"], session_id=session_id, message=message):
         for part in ev.get("content", {}).get("parts", []):
             if "text" in part and ev.get("author") != "user":
                 final = part["text"]
     return final
+
+
+async def ask_once(user: dict, message: str) -> str:
+    """Una consulta sin historial: sesión nueva y solo nos quedamos con el último texto del agente."""
+    return await ask_in_session(user, await new_session(user), message)
 
 
 # ---------------------------------------------------------------------------
@@ -111,6 +117,39 @@ async def ticket_summary(ticket_id: str, user: dict = Depends(current_user)):
         f"Pedido: {ticket['order_id']}. Mensaje del cliente: {ticket['text']}"
     )
     return {"ticket_id": ticket_id, "summary": await ask_once(user, prompt)}
+
+
+# ---------------------------------------------------------------------------
+# 4) Tu app orquesta: un proceso de varios pasos con el agente como un paso más.
+#    Regla: UNA sesión por instancia del proceso (el ticket). Los pasos que
+#    comparten contexto reenvían el mismo session_id; los independientes usan
+#    sesión nueva y pueden correr en paralelo. Lo que debe sobrevivir al proceso
+#    va a tu base de datos o a Memory Bank, no a la sesión.
+# ---------------------------------------------------------------------------
+PROCESS_SESSIONS: dict[str, str] = {}  # ticket_id → session_id (en la vida real: tu DB o el estado de Step Functions)
+
+
+@app.post("/tickets/{ticket_id}/resolve")
+async def ticket_resolve(ticket_id: str, user: dict = Depends(current_user)):
+    ticket = TICKETS.get(ticket_id)
+    if not ticket:
+        raise HTTPException(status_code=404)
+
+    # Paso 0 · la sesión del proceso. Si el proceso se reanuda (reintento, otro worker), se reutiliza.
+    session_id = PROCESS_SESSIONS.get(ticket_id) or await new_session(user)
+    PROCESS_SESSIONS[ticket_id] = session_id
+
+    # Paso 1 · investigar: el agente llama a sus tools; eventos y estado quedan en la sesión.
+    findings = await ask_in_session(user, session_id, f"Investiga el estado del pedido {ticket['order_id']} y resume en una línea qué pasa.")
+
+    # Paso 2 · redactar, MISMA sesión: ya sabe lo del paso 1 y no repite las tools.
+    # Paso 3 · clasificar el tono: independiente → sesión nueva, y en paralelo con el paso 2.
+    reply, sentiment = await asyncio.gather(
+        ask_in_session(user, session_id, f"Con lo que encontraste, redacta la respuesta al cliente a este mensaje: {ticket['text']}"),
+        ask_once(user, f"Clasifica el tono de este mensaje como positivo, neutro o negativo. Responde solo la palabra: {ticket['text']}"),
+    )
+    # Lo durable va a TU base de datos; la sesión puede expirar (o borrarla: andi.async_delete_session).
+    return {"ticket_id": ticket_id, "session_id": session_id, "findings": findings, "reply": reply, "sentiment": sentiment}
 
 
 # ---------------------------------------------------------------------------

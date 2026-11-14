@@ -226,6 +226,97 @@
   line-height: 1.45;
 }
 
+.int-proc {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 12px;
+}
+@media (max-width: 960px) {
+  .int-proc {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.int-runtime {
+  display: grid;
+  gap: 10px;
+}
+.int-rt-card {
+  border: 1px solid color-mix(in srgb, var(--tone) 35%, var(--border));
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--tone) 5%, var(--bg-elev));
+}
+.int-rt-card .h {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--tone);
+  margin-bottom: 8px;
+}
+.int-mem {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.5;
+  display: grid;
+  gap: 4px;
+}
+.int-mem li.is-fresh {
+  color: var(--text);
+}
+.int-mem .tag {
+  margin-left: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--c-memory);
+  border: 1px solid color-mix(in srgb, var(--c-memory) 50%, transparent);
+  border-radius: 999px;
+  padding: 0 6px;
+}
+.int-rules {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 760px) {
+  .int-rules {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.int-rule {
+  display: flex;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--bg-sunken);
+  font-size: 13.5px;
+}
+.int-rule .n {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-data);
+  border: 1px solid color-mix(in srgb, var(--c-data) 50%, transparent);
+  background: color-mix(in srgb, var(--c-data) 10%, var(--bg-elev));
+}
+.int-rule p {
+  margin: 3px 0 0;
+  color: var(--text-2);
+  line-height: 1.45;
+}
 .int-gov td:first-child {
   font-weight: 600;
   white-space: nowrap;

@@ -284,15 +284,19 @@ async def chat(body: ChatIn, user: dict = Depends(current_user)):
 
     return StreamingResponse(events(), media_type="text/event-stream")`
 
-export const CODE_BUTTON = `async def ask_once(user: dict, message: str) -> str:
-    """Una consulta sin historial: sesión nueva y solo nos quedamos con el último texto del agente."""
-    session_id = await new_session(user)
+export const CODE_BUTTON = `async def ask_in_session(user: dict, session_id: str, message: str) -> str:
+    """Un turno más en una sesión existente; devuelve el último texto del agente."""
     final = ""
     async for ev in andi.async_stream_query(user_id=user["customer_id"], session_id=session_id, message=message):
         for part in ev.get("content", {}).get("parts", []):
             if "text" in part and ev.get("author") != "user":
                 final = part["text"]
     return final
+
+
+async def ask_once(user: dict, message: str) -> str:
+    """Una consulta sin historial: sesión nueva y solo nos quedamos con el último texto del agente."""
+    return await ask_in_session(user, await new_session(user), message)
 
 
 @app.post("/tickets/{ticket_id}/summary")
@@ -500,6 +504,203 @@ export const ORCH: Orch[] = [
     flows: ['eb>lam', 'lam>andi', 'andi>api', 'api>cam'],
     height: 260,
   },
+]
+
+/* ------------------------------------------------------------------------ */
+/* Lab 5b · Tu app orquesta, paso a paso (API, gateway, Sessions, Memory)    */
+/* ------------------------------------------------------------------------ */
+export const PROC_NODES: FlowNode[] = [
+  { id: 'orch', x: 110, y: 170, w: 170, h: 70, label: 'Tu orquestador', sub: 'Step Functions · AWS', tone: 'system', cls: 'is-outside' },
+  { id: 'gw', x: 340, y: 170, w: 160, h: 66, label: 'Agent Gateway', sub: 'IAM + Model Armor', tone: 'guard' },
+  { id: 'agent', x: 570, y: 170, w: 170, h: 70, label: 'andes_ops', sub: 'Agent Runtime (runner)', tone: 'model' },
+  { id: 'gemini', x: 570, y: 50, w: 150, h: 52, label: 'Gemini', sub: 'gemini-4-hydrogen', tone: 'model' },
+  { id: 'tools', x: 810, y: 60, w: 150, h: 56, label: 'Toolbox', sub: 'Cloud SQL · principal://', tone: 'tool' },
+  { id: 'sessions', x: 810, y: 170, w: 150, h: 56, label: 'Sessions', sub: 'eventos + estado', tone: 'data' },
+  { id: 'memory', x: 810, y: 280, w: 150, h: 56, label: 'Memory Bank', sub: 'hechos por usuario', tone: 'memory' },
+]
+export const PROC_EDGES: FlowEdge[] = [
+  { from: 'orch', to: 'gw' },
+  { from: 'gw', to: 'agent' },
+  { from: 'agent', to: 'gemini' },
+  { from: 'agent', to: 'tools' },
+  { from: 'agent', to: 'sessions' },
+  { from: 'agent', to: 'memory' },
+]
+
+export type ProcStep = StepInfo & {
+  flows: string[]
+  active: string[]
+  code: string
+  lang: Lang
+  codeTitle: string
+  /** estado de Sessions que se muestra a la derecha */
+  session?: { id: string; events: number; state: Record<string, unknown>; changed?: string[]; note?: string }
+  /** hechos en Memory Bank (los nuevos se marcan) */
+  memories: { text: string; fresh?: boolean }[]
+}
+
+const S1 = '6137521909875261440'
+const S2 = '6137529988112000512'
+const BASE_STATE = { 'user:customer_id': CUSTOMER.id, 'user:role': 'customer' }
+const MEM_OLD = { text: `${CUSTOMER.id}: prefiere avisos por email, no SMS (sesión del 3-nov)` }
+
+export const PROC_STEPS: ProcStep[] = [
+  {
+    title: 'Arranca el proceso del ticket T-3310',
+    body: 'Tu orquestador (Step Functions, Temporal, un worker) crea la instancia del proceso y mira si ya existe una sesión para este ticket. No existe: el proceso es nuevo. Memory Bank ya guarda hechos de Camila de conversaciones anteriores.',
+    flows: [],
+    active: ['orch'],
+    code: `# examples/andes_portal/backend.py · /tickets/{ticket_id}/resolve
+session_id = PROCESS_SESSIONS.get(ticket_id) or await new_session(user)
+PROCESS_SESSIONS[ticket_id] = session_id   # en la vida real: tu DB o el estado de Step Functions`,
+    lang: 'python',
+    codeTitle: 'paso 0 · la sesión del proceso',
+    memories: [MEM_OLD],
+  },
+  {
+    title: 'Crea la sesión del proceso (API de Agent Runtime)',
+    body: 'async_create_session viaja como POST :query con class_method. El gateway autentica el principal federado; el runtime crea en Sessions una sesión vacía con el estado inicial que leerán los guardrails. Devuelve el id: ese es el hilo que compartirán los pasos 1 y 2.',
+    flows: ['orch>gw', 'gw>agent', 'agent>sessions'],
+    active: ['orch', 'gw', 'agent', 'sessions'],
+    code: `POST ${RESOURCE.replace('projects/', 'https://us-central1-aiplatform.googleapis.com/v1/projects/')}:query
+{ "class_method": "async_create_session",
+  "input": { "user_id": "${CUSTOMER.id}",
+             "state": { "user:customer_id": "${CUSTOMER.id}", "user:role": "customer" } } }
+
+← { "output": { "id": "${S1}", "app_name": "${REASONING_ENGINE_ID}",
+                "user_id": "${CUSTOMER.id}", "state": { … }, "events": [], "last_update_time": 1763121600.2 } }`,
+    lang: 'http',
+    codeTitle: 'REST · :query (método no streaming)',
+    session: { id: S1, events: 0, state: BASE_STATE, changed: ['user:customer_id', 'user:role'] },
+    memories: [MEM_OLD],
+  },
+  {
+    title: 'Paso 1 · investigar: :streamQuery con session_id',
+    body: 'Primer turno del proceso. Tu orquestador manda el mensaje con la sesión S. En el gateway: ¿tiene roles/aiplatform.user el principal federado? ¿pasa el prompt la plantilla de Model Armor? Recién entonces entra al runtime.',
+    flows: ['orch>gw'],
+    active: ['orch', 'gw'],
+    code: `POST …/reasoningEngines/${REASONING_ENGINE_ID}:streamQuery?alt=sse
+{ "class_method": "async_stream_query",
+  "input": { "user_id": "${CUSTOMER.id}", "session_id": "${S1}",
+             "message": "Investiga el estado del pedido 4821 y resume en una línea qué pasa." } }`,
+    lang: 'http',
+    codeTitle: 'REST · :streamQuery',
+    session: { id: S1, events: 0, state: BASE_STATE },
+    memories: [MEM_OLD],
+  },
+  {
+    title: 'El runner carga la sesión y consulta Memory Bank',
+    body: 'Dentro del runtime, el runner de ADK lee la sesión S (vacía) y agrega el mensaje del usuario como primer evento. La tool preload_memory consulta Memory Bank con el user_id y, si hay hechos relevantes, los inyecta en el contexto: Andi ya sabe que Camila prefiere email.',
+    flows: ['gw>agent', 'agent>sessions', 'agent>memory'],
+    active: ['agent', 'sessions', 'memory'],
+    code: `# examples/andes_prod/agent.py (el agente desplegado)
+root_agent = Agent(
+    name="andes_ops",
+    tools=[preload_memory, get_order, …],      # preload_memory: Memory Bank → contexto, cada turno
+    before_tool_callback=only_own_orders,      # lee user:customer_id del estado de la sesión
+    after_agent_callback=save_session_to_memory,
+)
+# memoria recuperada para user_id=${CUSTOMER.id}:
+#   "prefiere avisos por email, no SMS"`,
+    lang: 'python',
+    codeTitle: 'preload_memory · VertexAiMemoryBankService',
+    session: { id: S1, events: 1, state: BASE_STATE, note: '1 evento: el mensaje del paso 1' },
+    memories: [MEM_OLD],
+  },
+  {
+    title: 'Tools con Agent Identity; todo queda en la sesión',
+    body: 'Gemini decide llamar a get_order; el agente la ejecuta vía Toolbox con su propia identidad (principal://…), y cada paso (function_call, function_response, texto) se persiste como evento en Sessions. La tool escribió last_order_id en el estado con ToolContext.',
+    flows: ['agent>gemini', 'agent>tools', 'agent>sessions'],
+    active: ['agent', 'gemini', 'tools', 'sessions'],
+    code: `{ "author": "andes_ops", "content": { "parts": [ { "function_call": { "name": "get_order", "args": { "order_id": "4821" } } } ] } }
+{ "author": "andes_ops", "content": { "parts": [ { "function_response": { "name": "get_order",
+      "response": { "status": "en_ruta", "carrier": "AndesExpress", "tracking": "AX-88213-CL", "eta": "2026-11-14" } } } ] },
+  "actions": { "state_delta": { "last_order_id": "4821" } } }`,
+    lang: 'json',
+    codeTitle: 'eventos persistidos en la sesión S',
+    session: { id: S1, events: 3, state: { ...BASE_STATE, last_order_id: '4821' }, changed: ['last_order_id'] },
+    memories: [MEM_OLD],
+  },
+  {
+    title: 'Respuesta del paso 1; el orquestador guarda session_id',
+    body: 'El texto final vuelve por SSE. Tu orquestador guarda el resultado y el session_id en SU estado del proceso (junto al ticket). Si el worker muere y otro retoma, encuentra la misma sesión. Observa: la sesión ya tiene 4 eventos que el paso 2 podrá leer.',
+    flows: ['agent>gw', 'gw>orch'],
+    active: ['agent', 'gw', 'orch'],
+    code: `findings = await ask_in_session(user, session_id,
+    f"Investiga el estado del pedido {ticket['order_id']} y resume en una línea qué pasa.")
+# → "El 4821 va en ruta con AndesExpress (AX-88213-CL), entrega estimada 14-nov; sin incidencias."`,
+    lang: 'python',
+    codeTitle: 'paso 1 · resultado',
+    session: { id: S1, events: 4, state: { ...BASE_STATE, last_order_id: '4821' }, note: '4 eventos: mensaje, call, response, texto' },
+    memories: [MEM_OLD],
+  },
+  {
+    title: 'Paso 2 · misma sesión: no repite las tools',
+    body: 'Segundo turno con el mismo session_id. El runner carga los 4 eventos anteriores y los manda a Gemini como contexto: Andi ya sabe el estado del pedido y redacta la respuesta sin volver a llamar a get_order. Si hubieras creado otra sesión, habría que repetir la consulta (y pagarla).',
+    flows: ['orch>gw', 'gw>agent', 'agent>sessions', 'agent>gemini'],
+    active: ['orch', 'gw', 'agent', 'sessions', 'gemini'],
+    code: `reply = await ask_in_session(user, session_id,
+    f"Con lo que encontraste, redacta la respuesta al cliente a este mensaje: {ticket['text']}")
+# contexto que ve Gemini: [memoria: prefiere email] + 4 eventos del paso 1 + este mensaje
+# → "Hola Camila, tu pedido 4821 va en ruta y llega el jueves 14, antes del viernes…"`,
+    lang: 'python',
+    codeTitle: 'paso 2 · reutiliza la sesión',
+    session: { id: S1, events: 6, state: { ...BASE_STATE, last_order_id: '4821' }, note: '6 eventos: + mensaje y texto del paso 2 (sin tools)' },
+    memories: [MEM_OLD],
+  },
+  {
+    title: 'after_agent_callback → Memory Bank aprende',
+    body: 'Al terminar cada turno del raíz, save_session_to_memory manda la sesión a Memory Bank. Google extrae hechos con un LLM, los consolida con los anteriores y los deja disponibles para cualquier sesión futura de cus_7781, venga del portal, de Gemini Enterprise o de un evento. Es asíncrono: no frena la respuesta.',
+    flows: ['agent>memory'],
+    active: ['agent', 'memory'],
+    code: `async def save_session_to_memory(callback_context: CallbackContext):
+    await callback_context.add_session_to_memory()   # Memory Bank: extrae + consolida hechos del usuario
+
+# Memory Bank (scope app_name + user_id=${CUSTOMER.id}) después de este turno:
+#   • prefiere avisos por email, no SMS
+#   • necesita el pedido 4821 antes del viernes 15-nov (es un regalo)   ← nuevo`,
+    lang: 'python',
+    codeTitle: 'examples/andes_prod/agent.py · memoria',
+    session: { id: S1, events: 6, state: { ...BASE_STATE, last_order_id: '4821' } },
+    memories: [MEM_OLD, { text: `${CUSTOMER.id}: necesita el pedido 4821 antes del viernes 15-nov (regalo)`, fresh: true }],
+  },
+  {
+    title: 'Paso 3 · independiente: sesión nueva, en paralelo',
+    body: 'Clasificar el tono del mensaje no necesita nada del paso 1. Sesión nueva (S2) y asyncio.gather para correrlo junto al paso 2. Regla: un turno en vuelo por sesión; lo paralelo va en sesiones distintas. Y el paso queda reproducible por sí solo en un evalset.',
+    flows: ['orch>gw', 'gw>agent', 'agent>sessions'],
+    active: ['orch', 'gw', 'agent', 'sessions'],
+    code: `reply, sentiment = await asyncio.gather(
+    ask_in_session(user, session_id, "Con lo que encontraste, redacta …"),   # sesión S  (paso 2)
+    ask_once(user, "Clasifica el tono de este mensaje … Responde solo la palabra: …"),  # sesión S2 (paso 3)
+)`,
+    lang: 'python',
+    codeTitle: 'paso 3 · sesión nueva + paralelo',
+    session: { id: S2, events: 2, state: BASE_STATE, changed: ['user:customer_id', 'user:role'], note: 'S2: 2 eventos, sin contexto del ticket' },
+    memories: [MEM_OLD, { text: `${CUSTOMER.id}: necesita el pedido 4821 antes del viernes 15-nov (regalo)` }],
+  },
+  {
+    title: 'Cierre: lo durable no vive en la sesión',
+    body: 'Tu orquestador guarda findings, reply y sentiment en tu base de datos y responde. La sesión S puede expirar o borrarse (async_delete_session): lo que importa ya está en tu DB (resultados) y en Memory Bank (hechos de Camila). En Cloud Trace verás tres invocaciones, dos con la misma sesión.',
+    flows: ['gw>orch'],
+    active: ['orch'],
+    code: `{ "ticket_id": "T-3310", "session_id": "${S1}",
+  "findings": "El 4821 va en ruta con AndesExpress (AX-88213-CL), entrega estimada 14-nov; sin incidencias.",
+  "reply": "Hola Camila, tu pedido 4821 va en ruta y llega el jueves 14, antes del viernes. …",
+  "sentiment": "neutro" }`,
+    lang: 'json',
+    codeTitle: 'respuesta de /tickets/T-3310/resolve',
+    session: { id: S1, events: 6, state: { ...BASE_STATE, last_order_id: '4821' }, note: 'puede expirar o borrarse' },
+    memories: [MEM_OLD, { text: `${CUSTOMER.id}: necesita el pedido 4821 antes del viernes 15-nov (regalo)` }],
+  },
+]
+
+export const SESSION_RULES: { k: string; v: string }[] = [
+  { k: 'Una sesión por instancia del proceso', v: 'Un ticket, una corrida nocturna, una solicitud. No una por paso (pierdes contexto y pagas tools repetidas) ni una global (crece sin límite y confunde al modelo).' },
+  { k: 'Reutiliza cuando el paso siguiente necesita lo anterior', v: 'Guarda el session_id en el estado de tu orquestador junto al id del proceso. Si un worker muere, el siguiente encuentra la misma sesión.' },
+  { k: 'Pasa los datos en el mensaje', v: 'Tu orquestador ya tiene el pedido, el ETA, el texto del cliente: ponlos en el prompt en vez de confiar en que «están en la sesión». Cada paso queda reproducible y evaluable con adk eval.' },
+  { k: 'Un turno en vuelo por sesión', v: 'Dos consultas concurrentes sobre la misma sesión entrelazan eventos. Lo paralelo va en sesiones distintas (asyncio.gather con ask_once).' },
+  { k: 'Reintentos agregan, no sobrescriben', v: 'Repetir un paso sobre la misma sesión añade otro turno. Haz el paso idempotente de tu lado o usa sesión nueva en el reintento.' },
+  { k: 'Lo durable, fuera de la sesión', v: 'Resultados → tu base de datos. Hechos del usuario → Memory Bank (add_session_to_memory) y estado user:. La sesión puede expirar o borrarse.' },
 ]
 
 /* ------------------------------------------------------------------------ */

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Bot, Globe, Loader2, MessageSquare, Radio, Ticket, Wrench } from 'lucide-react'
+import { Bot, Brain, Database, Globe, Loader2, MessageSquare, Radio, Ticket, Wrench } from 'lucide-react'
 import { ArchDiagram } from '../../components/Arch'
 import { Code, linesOf } from '../../components/Code'
-import { ChatBubbles } from '../../components/Events'
+import { ChatBubbles, StateView } from '../../components/Events'
 import { FlowDiagram } from '../../components/Flow'
 import { Narration, PlayerBar } from '../../components/Player'
 import { Terminal, useTerminalPlayer } from '../../components/Terminal'
@@ -24,6 +24,10 @@ import {
   EVENT_LOG,
   GOVERNANCE,
   ORCH,
+  PROC_EDGES,
+  PROC_NODES,
+  PROC_STEPS,
+  SESSION_RULES,
   TICKET,
   TICKET_SUMMARY,
   WIF_LINES,
@@ -343,6 +347,88 @@ function OrchLab() {
 }
 
 /* ------------------------------------------------------------------------ */
+/* Lab 5b · Tu app orquesta, paso a paso                                     */
+/* ------------------------------------------------------------------------ */
+function RuntimePanel({ step }: { step: (typeof PROC_STEPS)[number] }) {
+  const s = step.session
+  return (
+    <div className="int-runtime">
+      <div className="int-rt-card" data-tone="data">
+        <div className="h">
+          <Database size={13} /> Sessions
+          {s && (
+            <span className="mono small" style={{ marginLeft: 'auto' }}>
+              {s.id.slice(0, 6)}… · {s.events} evento{s.events === 1 ? '' : 's'}
+            </span>
+          )}
+        </div>
+        {s ? (
+          <>
+            <StateView state={s.state} changed={s.changed ?? []} title="session.state" />
+            {s.note && <div className="small muted" style={{ marginTop: 6 }}>{s.note}</div>}
+          </>
+        ) : (
+          <div className="small muted">Sin sesión todavía para este proceso.</div>
+        )}
+      </div>
+      <div className="int-rt-card" data-tone="memory">
+        <div className="h">
+          <Brain size={13} /> Memory Bank · {CUSTOMER.id}
+        </div>
+        <ul className="int-mem">
+          {step.memories.map((m) => (
+            <li key={m.text} className={m.fresh ? 'is-fresh anim-in' : ''}>
+              {m.text}
+              {m.fresh && <span className="tag">nuevo</span>}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+function ProcessLab() {
+  const player = usePlayer(PROC_STEPS.length, { interval: 6000 })
+  const s = PROC_STEPS[player.step]
+  return (
+    <Lab title="Tu app orquesta: tres pasos, una sesión, Memory Bank aprendiendo" hint="Reproduce o haz clic en un paso">
+      <PlayerBar player={player} labels={PROC_STEPS.map((x) => x.title)} />
+      <FlowDiagram nodes={PROC_NODES} edges={PROC_EDGES} width={900} height={340} flows={s.flows} active={s.active} dimInactive ariaLabel="Un proceso orquestado desde AWS que usa Agent Runtime, el gateway, Sessions y Memory Bank" />
+      <div className="int-proc">
+        <div className="stack">
+          <Narration steps={PROC_STEPS} step={player.step} />
+          <div className="anim-fade" key={`c${player.step}`}>
+            <Code code={s.code} lang={s.lang} title={s.codeTitle} maxHeight={260} lineNumbers={false} />
+          </div>
+        </div>
+        <div className="anim-fade" key={`r${player.step}`}>
+          <RuntimePanel step={s} />
+        </div>
+      </div>
+    </Lab>
+  )
+}
+
+function SessionRules() {
+  return (
+    <Lab title="Reglas para sesiones cuando tu app orquesta" badge="Guía" hint="Lo que conviene documentar en tu equipo">
+      <div className="int-rules">
+        {SESSION_RULES.map((r, i) => (
+          <div key={r.k} className="int-rule">
+            <span className="n">{i + 1}</span>
+            <div>
+              <strong>{r.k}</strong>
+              <p>{r.v}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Lab>
+  )
+}
+
+/* ------------------------------------------------------------------------ */
 /* Lab 6 · ¿Qué sigue aplicando?                                             */
 /* ------------------------------------------------------------------------ */
 function GovernanceTable() {
@@ -468,6 +554,21 @@ export default function Lesson() {
           portal suele tener chat (el agente orquesta) y automatizaciones (tu app orquesta o eventos).
         </p>
         <OrchLab />
+        <h3>Cuando tu app orquesta: la sesión es el hilo del proceso</h3>
+        <p>
+          La pregunta que surge enseguida: ¿reutilizo la sesión entre pasos? Sí, y es lo normal, con un alcance claro: <strong>una sesión por instancia
+          del proceso</strong> (el ticket T-3310), que comparten los pasos que se necesitan entre sí, y sesiones nuevas para los pasos independientes.
+          El lab sigue al endpoint <code>/tickets/&#123;id&#125;/resolve</code> del backend: tres pasos, y mira a la derecha cómo cambian Sessions y
+          Memory Bank en cada uno.
+        </p>
+        <ProcessLab />
+        <SessionRules />
+        <Callout tone="info" title="¿«La API del runner»? Casi: la API de Agent Runtime">
+          En local, la clase <code>Runner</code> de ADK ejecuta tu agente dentro de tu proceso. Al desplegar, Agent Runtime envuelve tu agente con su
+          propio runner y lo expone como API HTTP: <code>:query</code> y <code>:streamQuery</code>, donde <code>class_method</code> nombra el método a
+          ejecutar (<code>async_create_session</code>, <code>async_stream_query</code>, <code>async_delete_session</code>…). Tu app habla con esa API; el
+          runner, las sesiones, la memoria, el gateway y la identidad los opera Google.
+        </Callout>
       </Section>
 
       <Section n={6} title="¿Y Agent Gateway, Model Armor, identidad…? Siguen ahí">
@@ -516,6 +617,10 @@ export default function Lesson() {
           </>,
           <>
             Cuatro formas de orquestar: el agente orquesta, tu app orquesta, A2A entre nubes, eventos en ambos sentidos. Un portal real combina varias.
+          </>,
+          <>
+            Si tu app orquesta: <strong>una sesión por instancia del proceso</strong>, reutilizada por los pasos que se necesitan, sesión nueva para los
+            independientes (y en paralelo). Lo durable va a tu base de datos y a Memory Bank, no a la sesión.
           </>,
           <>
             La gobernanza <strong>sigue al agente</strong>: gateway, Model Armor, identidad, registry, sesiones y trazas aplican igual desde cualquier
