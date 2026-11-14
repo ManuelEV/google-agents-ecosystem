@@ -1,0 +1,23 @@
+[project]
+name = "andes-market-agents"
+version = "0.1.0"
+description = "Agentes de Andes Market construidos con Google ADK (ejemplos del tutorial Google Agents Ecosystem)"
+requires-python = ">=3.11"
+dependencies = [
+  # ADK 2.14.x: Workflow Runtime (grafos), plugins, Model Armor, A2A y eval estables
+  "google-adk[gcp,toolbox,a2a,eval,mcp]>=2.14,<3",
+  # SDK de la plataforma para desplegar/consultar Agent Runtime desde Python (opcional si solo usas la CLI)
+  "google-cloud-aiplatform[agent_engines,adk]>=1.112",
+  # servidor MCP de ejemplo (API del transportista) y pruebas
+  "mcp>=1.10",
+  "uvicorn>=0.30",
+  "pytest>=8",
+  "pytest-asyncio>=0.24",
+  "python-dotenv>=1.0",
+]
+
+[tool.setuptools]
+packages = ["andes_hello", "andes_data", "andes_workflow", "andes_prod", "andes_common"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

@@ -1,0 +1,36 @@
+# Dos Postgres para probar en local lo que en producción es
+#   orders → Cloud SQL (dentro de Google)   y   erp → Postgres on-prem (fuera)
+services:
+  orders-db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: orders
+      POSTGRES_USER: orders
+      POSTGRES_PASSWORD: orders
+    ports: ["5432:5432"]
+    volumes:
+      - ./sql/orders_seed.sql:/docker-entrypoint-initdb.d/01_orders.sql:ro
+
+  erp-db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: erp
+      POSTGRES_USER: erp
+      POSTGRES_PASSWORD: erp
+    ports: ["5433:5432"]
+    volumes:
+      - ./sql/erp_seed.sql:/docker-entrypoint-initdb.d/01_erp.sql:ro
+
+  # MCP Toolbox for Databases leyendo tools.local.yaml
+  toolbox:
+    image: us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
+    command: ["--config", "/config/tools.local.yaml", "--address", "0.0.0.0", "--port", "5000"]
+    environment:
+      ORDERS_DB_HOST: orders-db
+      ORDERS_DB_PORT: "5432"
+      ERP_DB_HOST: erp-db
+      ERP_DB_PORT: "5432"
+    volumes:
+      - ../toolbox:/config:ro
+    ports: ["5000:5000"]
+    depends_on: [orders-db, erp-db]

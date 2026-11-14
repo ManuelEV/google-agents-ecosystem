@@ -1,0 +1,148 @@
+.wf-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 960px) {
+  .wf-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.wf-graph {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+.wf-node rect {
+  fill: var(--bg-elev);
+  stroke: color-mix(in srgb, var(--tone) 45%, var(--border));
+  stroke-width: 1.5;
+  transition:
+    stroke 0.3s,
+    fill 0.3s;
+}
+.wf-node.is-fn rect {
+  stroke-dasharray: 5 4;
+}
+.wf-node.is-on rect {
+  stroke: var(--tone);
+  stroke-width: 2.5;
+  fill: color-mix(in srgb, var(--tone) 14%, var(--bg-elev));
+}
+.wf-node.is-paused rect {
+  stroke: var(--c-guard);
+  animation: wf-blink 1s steps(1) infinite;
+}
+@keyframes wf-blink {
+  50% {
+    fill: color-mix(in srgb, var(--c-guard) 30%, var(--bg-elev));
+  }
+}
+.wf-node text {
+  fill: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+.wf-node text.sub {
+  fill: var(--text-3);
+  font-size: 9.5px;
+}
+.wf-edge {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+.wf-edge.is-on {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+  stroke-dasharray: 7 6;
+  animation: dash-run 0.7s linear infinite;
+}
+.wf-edge-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  fill: var(--text-3);
+}
+.wf-edge-label.is-on {
+  fill: var(--accent);
+  font-weight: 700;
+}
+.wf-arrow {
+  fill: var(--border-strong);
+}
+.wf-arrow.is-on {
+  fill: var(--accent);
+}
+.wf-pause {
+  border: 1px solid color-mix(in srgb, var(--c-guard) 50%, transparent);
+  background: color-mix(in srgb, var(--c-guard) 10%, var(--bg-elev));
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+}
+.wf-pause .q {
+  font-weight: 600;
+}
+.wf-modes {
+  display: grid;
+  gap: 8px;
+}
+.wf-mode-row {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-elev);
+  font-size: 14px;
+}
+.wf-mode-row .k {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+@media (max-width: 640px) {
+  .wf-mode-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}
+.wf-desc {
+  display: grid;
+  gap: 8px;
+}
+.wf-desc label {
+  display: grid;
+  gap: 3px;
+  font-size: 13px;
+}
+.wf-desc .nm {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--c-model);
+}
+.wf-decision {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: var(--bg-elev);
+  display: grid;
+  gap: 8px;
+}
+.wf-decision .pick {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+}
+.wf-tree-user {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}

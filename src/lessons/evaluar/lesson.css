@@ -1,0 +1,212 @@
+.eval-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 14px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .eval-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.eval-field {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  border-radius: 10px;
+  padding: 8px 11px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13.5px;
+  margin-bottom: 6px;
+}
+.eval-field code {
+  font-size: 12px;
+}
+.eval-field:hover {
+  border-color: var(--accent);
+}
+.eval-field.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.eval-field-body {
+  margin: 6px 0 0;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.eval-cases {
+  display: grid;
+  gap: 10px;
+}
+.eval-case {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-elev);
+  padding: 10px 12px;
+  display: grid;
+  gap: 6px;
+  border-left: 4px solid var(--tone);
+}
+.eval-case.is-pass {
+  --tone: var(--c-ok);
+}
+.eval-case.is-fail {
+  --tone: var(--c-error);
+}
+.eval-case.is-dim {
+  opacity: 0.45;
+}
+.eval-case-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-weight: 600;
+}
+.eval-case-head .q {
+  color: var(--text-3);
+  font-weight: 400;
+  font-size: 13px;
+}
+.eval-traj {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 640px) {
+  .eval-traj {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.eval-traj ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+.eval-traj li {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: var(--bg-sunken);
+}
+.eval-traj li.is-ok {
+  color: var(--c-ok);
+}
+.eval-traj li.is-extra {
+  color: var(--c-error);
+  background: color-mix(in srgb, var(--c-error) 12%, transparent);
+}
+.eval-traj li.is-miss {
+  color: var(--c-guard);
+}
+.eval-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--tone) 15%, transparent);
+  color: var(--tone);
+  border: 1px solid color-mix(in srgb, var(--tone) 40%, transparent);
+}
+.eval-run {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 960px) {
+  .eval-run {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.eval-trace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 960px) {
+  .eval-trace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.eval-wf {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.eval-wf .lbl {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--text);
+}
+.eval-wf .ms {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--text-3);
+}
+.eval-wf .bar {
+  fill: color-mix(in srgb, var(--tone) 55%, var(--bg-elev));
+  stroke: var(--tone);
+  stroke-width: 1;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.eval-wf g.is-active .bar {
+  fill: var(--tone);
+}
+.eval-wf g.is-dim .bar {
+  opacity: 0.35;
+}
+.eval-wf .grid {
+  stroke: var(--border);
+  stroke-dasharray: 2 4;
+}
+.eval-attrs {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  display: grid;
+  gap: 3px;
+}
+.eval-attrs div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+}
+.eval-attrs div:last-child {
+  border-bottom: 0;
+}
+.eval-attrs .k {
+  color: var(--text-3);
+  font-size: 11px;
+  word-break: break-all;
+}
+.eval-attrs .v {
+  color: var(--text);
+  word-break: break-all;
+}
+.eval-attrs .v.is-hidden {
+  color: var(--text-3);
+  font-style: italic;
+}
+.eval-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}

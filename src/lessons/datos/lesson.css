@@ -1,0 +1,156 @@
+.datos-sql-cmp {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+@media (max-width: 860px) {
+  .datos-sql-cmp {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.datos-sql-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-elev);
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+  border-top: 3px solid var(--tone);
+}
+.datos-sql-card h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--tone);
+}
+.datos-sql-card .q {
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.datos-sql-card pre {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.datos-sql-card pre.is-bad {
+  border-color: color-mix(in srgb, var(--c-error) 60%, transparent);
+  background: color-mix(in srgb, var(--c-error) 8%, var(--code-bg));
+}
+.datos-sql-card pre.is-good {
+  border-color: color-mix(in srgb, var(--c-ok) 60%, transparent);
+  background: color-mix(in srgb, var(--c-ok) 8%, var(--code-bg));
+}
+.datos-yaml {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+  gap: 14px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .datos-yaml {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.datos-pick {
+  display: grid;
+  gap: 6px;
+}
+.datos-pick button {
+  text-align: left;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  border-radius: 10px;
+  padding: 8px 11px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13.5px;
+  display: grid;
+  gap: 2px;
+}
+.datos-pick button:hover {
+  border-color: var(--tone, var(--accent));
+}
+.datos-pick button.is-active {
+  border-color: var(--tone, var(--accent));
+  background: color-mix(in srgb, var(--tone, var(--accent)) 12%, var(--bg-elev));
+}
+.datos-pick .nm {
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+.datos-pick .ds {
+  color: var(--text-3);
+  font-size: 12px;
+}
+.datos-stock {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  margin-top: 10px;
+}
+@media (max-width: 960px) {
+  .datos-stock {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.datos-toolset {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+@media (max-width: 860px) {
+  .datos-toolset {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.datos-tool-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 13.5px;
+  transition: opacity 0.3s;
+}
+.datos-tool-row.is-off {
+  opacity: 0.35;
+  text-decoration: line-through;
+}
+.datos-tool-row .src {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+}
+.datos-auth {
+  display: grid;
+  gap: 14px;
+  align-items: start;
+}
+.datos-auth ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  color: var(--text-2);
+  columns: 2;
+  column-gap: 24px;
+}
+@media (max-width: 860px) {
+  .datos-auth ul {
+    columns: 1;
+  }
+}
+.datos-auth li {
+  margin-bottom: 6px;
+  break-inside: avoid;
+}

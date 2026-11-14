@@ -1,0 +1,106 @@
+# MCP Toolbox for Databases · configuración de PRODUCCIÓN
+#   toolbox --config tools.yaml
+# Las fuentes viven dentro y fuera de Google Cloud; el agente no lo nota:
+# solo ve herramientas con nombre, descripción y parámetros.
+
+# ---------- Fuentes ----------
+kind: source
+name: orders-db
+type: cloud-sql-postgres          # dentro de Google: Cloud SQL (conexión por IAM, sin exponer IP)
+project: ${GOOGLE_CLOUD_PROJECT}
+region: ${GOOGLE_CLOUD_LOCATION:us-central1}
+instance: ${CLOUDSQL_INSTANCE:andes-orders}
+database: ${ORDERS_DB_NAME:orders}
+user: ${ORDERS_DB_USER}
+password: ${ORDERS_DB_PASSWORD}
+---
+kind: source
+name: erp-db
+type: postgres                    # fuera de Google: Postgres del ERP (on-prem / otra nube) vía VPN o IP privada
+host: ${ERP_DB_HOST}
+port: ${ERP_DB_PORT:5432}
+database: ${ERP_DB_NAME:erp}
+user: ${ERP_DB_USER}
+password: ${ERP_DB_PASSWORD}
+---
+kind: source
+name: analytics
+type: bigquery                    # dentro de Google: BigQuery (usa ADC / identidad del workload)
+project: ${GOOGLE_CLOUD_PROJECT}
+
+# ---------- Herramientas ----------
+# Regla de oro: SQL parametrizado con $1, $2… El modelo solo elige los valores,
+# nunca escribe SQL. Si cambias una consulta, reinicias Toolbox: no redespliegas el agente.
+---
+kind: tool
+name: get_order
+type: postgres-sql
+source: orders-db
+description: Devuelve un pedido de Andes Market con sus ítems, estado, transportista y seguimiento.
+parameters:
+  - name: order_id
+    type: string
+    description: Número del pedido, por ejemplo "4821".
+statement: |
+  SELECT o.order_id, o.state, o.total_clp, o.carrier, o.tracking, o.eta, o.created,
+         json_agg(json_build_object('sku', i.sku, 'name', i.name, 'qty', i.qty, 'price_clp', i.price_clp)) AS items
+  FROM orders o JOIN order_items i ON i.order_id = o.order_id
+  WHERE o.order_id = $1
+  GROUP BY o.order_id;
+---
+kind: tool
+name: search_orders_by_customer
+type: postgres-sql
+source: orders-db
+description: Lista los pedidos recientes de un cliente a partir de su email.
+parameters:
+  - name: email
+    type: string
+    description: Email del cliente.
+statement: |
+  SELECT o.order_id, o.state, o.total_clp, o.created
+  FROM orders o JOIN customers c ON c.customer_id = o.customer_id
+  WHERE c.email = $1
+  ORDER BY o.created DESC LIMIT 20;
+---
+kind: tool
+name: get_stock
+type: postgres-sql
+source: erp-db
+description: Stock disponible de un SKU en cada bodega del ERP, con fecha de reposición si está agotado.
+parameters:
+  - name: sku
+    type: string
+    description: Código SKU, por ejemplo "ZAP-TRK-41".
+statement: SELECT sku, name, warehouse, stock, restock_date FROM inventory WHERE sku = $1;
+---
+kind: tool
+name: daily_sales
+type: bigquery-sql
+source: analytics
+description: Ventas totales por día (CLP) de los últimos N días. Solo para el equipo interno.
+parameters:
+  - name: days
+    type: integer
+    description: Cantidad de días hacia atrás (1-90).
+statement: |
+  SELECT DATE(created) AS day, SUM(total_clp) AS sales_clp, COUNT(*) AS orders
+  FROM `${BQ_DATASET:andes_analytics}.orders`
+  WHERE created >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL @days DAY)
+  GROUP BY day ORDER BY day DESC;
+
+# ---------- Toolsets ----------
+---
+kind: toolset
+name: andes_ops
+tools:
+  - get_order
+  - search_orders_by_customer
+  - get_stock
+  - daily_sales
+---
+kind: toolset
+name: andes_support_readonly
+tools:
+  - get_order
+  - get_stock

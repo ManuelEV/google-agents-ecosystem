@@ -1,0 +1,84 @@
+# MCP Toolbox · configuración LOCAL: los dos Postgres corren en Docker
+# (docker compose -f ../docker/compose.yaml up -d) y BigQuery se omite.
+#   toolbox --config tools.local.yaml
+kind: source
+name: orders-db
+type: postgres
+host: ${ORDERS_DB_HOST:127.0.0.1}
+port: ${ORDERS_DB_PORT:5432}
+database: ${ORDERS_DB_NAME:orders}
+user: ${ORDERS_DB_USER:orders}
+password: ${ORDERS_DB_PASSWORD:orders}
+---
+kind: source
+name: erp-db
+type: postgres
+host: ${ERP_DB_HOST:127.0.0.1}
+port: ${ERP_DB_PORT:5433}
+database: ${ERP_DB_NAME:erp}
+user: ${ERP_DB_USER:erp}
+password: ${ERP_DB_PASSWORD:erp}
+---
+kind: tool
+name: get_order
+type: postgres-sql
+source: orders-db
+description: Devuelve un pedido de Andes Market con sus ítems, estado, transportista y seguimiento.
+parameters:
+  - name: order_id
+    type: string
+    description: Número del pedido, por ejemplo "4821".
+statement: |
+  SELECT o.order_id, o.state, o.total_clp, o.carrier, o.tracking, o.eta, o.created,
+         json_agg(json_build_object('sku', i.sku, 'name', i.name, 'qty', i.qty, 'price_clp', i.price_clp)) AS items
+  FROM orders o JOIN order_items i ON i.order_id = o.order_id
+  WHERE o.order_id = $1
+  GROUP BY o.order_id;
+---
+kind: tool
+name: search_orders_by_customer
+type: postgres-sql
+source: orders-db
+description: Lista los pedidos recientes de un cliente a partir de su email.
+parameters:
+  - name: email
+    type: string
+    description: Email del cliente.
+statement: |
+  SELECT o.order_id, o.state, o.total_clp, o.created
+  FROM orders o JOIN customers c ON c.customer_id = o.customer_id
+  WHERE c.email = $1
+  ORDER BY o.created DESC LIMIT 20;
+---
+kind: tool
+name: get_stock
+type: postgres-sql
+source: erp-db
+description: Stock disponible de un SKU en cada bodega del ERP, con fecha de reposición si está agotado.
+parameters:
+  - name: sku
+    type: string
+    description: Código SKU, por ejemplo "ZAP-TRK-41".
+statement: SELECT sku, name, warehouse, stock, restock_date FROM inventory WHERE sku = $1;
+---
+kind: tool
+name: daily_sales
+type: postgres-sql
+source: orders-db
+description: Ventas totales por día (CLP) de los últimos N días. Solo para el equipo interno.
+parameters:
+  - name: days
+    type: integer
+    description: Cantidad de días hacia atrás (1-90).
+statement: |
+  SELECT DATE(created) AS day, SUM(total_clp) AS sales_clp, COUNT(*) AS orders
+  FROM orders WHERE created >= now() - ($1 || ' days')::interval
+  GROUP BY day ORDER BY day DESC;
+---
+kind: toolset
+name: andes_ops
+tools:
+  - get_order
+  - search_orders_by_customer
+  - get_stock
+  - daily_sales

@@ -1,0 +1,196 @@
+.sm-boxes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 1000px) {
+  .sm-boxes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .sm-boxes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.sm-box {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-elev);
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+.sm-box-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.sm-box-sub {
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+.sm-writer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+@media (max-width: 760px) {
+  .sm-writer {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+.sm-writer label {
+  display: grid;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.sm-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .sm-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.sm-rendered {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-sunken);
+  padding: 12px 14px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+.sm-rendered .inj {
+  background: color-mix(in srgb, var(--c-memory) 22%, transparent);
+  border-radius: 4px;
+  padding: 0 3px;
+  color: var(--text);
+}
+.sm-rendered .missing {
+  background: color-mix(in srgb, var(--c-error) 18%, transparent);
+  border-radius: 4px;
+  padding: 0 3px;
+  color: var(--c-error);
+}
+.sm-rendered .opt {
+  background: color-mix(in srgb, var(--c-guard) 20%, transparent);
+  border-radius: 4px;
+  padding: 0 3px;
+}
+.sm-mem {
+  border: 1px solid color-mix(in srgb, var(--c-memory) 45%, var(--border));
+  border-left: 4px solid var(--c-memory);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--c-memory) 7%, var(--bg-elev));
+  padding: 8px 10px;
+  font-size: 13px;
+  animation: pop-in 0.45s ease both;
+}
+.sm-mem .fact {
+  font-weight: 600;
+}
+.sm-mem .nm {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-3);
+  word-break: break-all;
+}
+.sm-timeline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+@media (max-width: 960px) {
+  .sm-timeline {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.sm-bank {
+  border: 1px dashed color-mix(in srgb, var(--c-memory) 60%, transparent);
+  border-radius: 14px;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+  min-height: 160px;
+  align-content: start;
+  transition: box-shadow 0.3s;
+}
+.sm-bank.is-on {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-memory) 22%, transparent);
+}
+.sm-bank-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--c-memory);
+}
+.sm-conv {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-elev);
+  padding: 10px;
+  transition: opacity 0.3s;
+}
+.sm-conv.is-dim {
+  opacity: 0.4;
+}
+.sm-conv-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13.5px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sm-arrow {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+  padding: 6px 0;
+}
+.sm-arrow.is-on {
+  color: var(--c-memory);
+  font-weight: 700;
+}
+.sm-svc {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  font-size: 14px;
+  min-width: 0;
+}
+.sm-svc > * {
+  min-width: 0;
+}
+.sm-box .state-row {
+  grid-template-columns: 52px minmax(0, 1fr);
+}
+.sm-box .state-val {
+  grid-column: 2;
+}
+.sm-svc .r {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 8px;
+}
+.sm-svc .k {
+  color: var(--text-3);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: var(--font-mono);
+}

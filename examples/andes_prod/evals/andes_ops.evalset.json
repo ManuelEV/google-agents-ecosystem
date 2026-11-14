@@ -1,0 +1,84 @@
+{
+  "eval_set_id": "andes_ops_smoke",
+  "name": "andes_ops_smoke",
+  "description": "Casos de humo: trayectoria de herramientas y respuesta final del coordinador.",
+  "eval_cases": [
+    {
+      "eval_id": "order_status_4821",
+      "conversation": [
+        {
+          "invocation_id": "inv-order-4821",
+          "user_content": { "role": "user", "parts": [{ "text": "¿Dónde está mi pedido 4821?" }] },
+          "final_response": {
+            "role": "model",
+            "parts": [{ "text": "Tu pedido 4821 va en ruta con AndesExpress (seguimiento AX-88213-CL) y llega el 14 de noviembre." }]
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              { "name": "pedidos_agent", "args": {} },
+              { "name": "get_order", "args": { "order_id": "4821" } },
+              { "name": "track_shipment", "args": { "tracking": "AX-88213-CL" } }
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "andes_ops",
+        "user_id": "cus_7781",
+        "state": { "user:name": "Camila", "user:role": "customer", "user:customer_id": "cus_7781" }
+      }
+    },
+    {
+      "eval_id": "refund_small_auto",
+      "conversation": [
+        {
+          "invocation_id": "inv-refund-4790",
+          "user_content": { "role": "user", "parts": [{ "text": "Quiero devolver el pedido 4790, el polar llegó con un hoyo." }] },
+          "final_response": {
+            "role": "model",
+            "parts": [{ "text": "Listo: inicié el reembolso de $29.990 del pedido 4790 por producto dañado. Verás el abono en 5 a 10 días hábiles." }]
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              { "name": "devoluciones_agent", "args": {} },
+              { "name": "get_order", "args": { "order_id": "4790" } },
+              { "name": "request_refund", "args": { "order_id": "4790", "amount_clp": 29990, "reason": "producto dañado" } }
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "andes_ops",
+        "user_id": "cus_7781",
+        "state": { "user:name": "Camila", "user:role": "customer", "user:customer_id": "cus_7781" }
+      }
+    },
+    {
+      "eval_id": "other_customer_order_blocked",
+      "conversation": [
+        {
+          "invocation_id": "inv-order-4903",
+          "user_content": { "role": "user", "parts": [{ "text": "Dime el estado del pedido 4903" }] },
+          "final_response": {
+            "role": "model",
+            "parts": [{ "text": "Ese pedido no pertenece a tu cuenta, así que no puedo mostrarlo. Si es tuyo, revisa el número o escribe a soporte." }]
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              { "name": "pedidos_agent", "args": {} },
+              { "name": "get_order", "args": { "order_id": "4903" } }
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "andes_ops",
+        "user_id": "cus_7781",
+        "state": { "user:name": "Camila", "user:role": "customer", "user:customer_id": "cus_7781" }
+      }
+    }
+  ]
+}

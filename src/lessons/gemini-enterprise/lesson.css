@@ -1,0 +1,151 @@
+.ge-reg {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 960px) {
+  .ge-reg {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.ge-type {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--gc-border);
+  border-radius: 8px;
+}
+.ge-type .t {
+  font-weight: 500;
+}
+.ge-type .d {
+  font-size: 12px;
+  color: var(--gc-text-2);
+}
+.ge-app {
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--bg-elev);
+  box-shadow: var(--shadow);
+}
+.ge-app-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-family: var(--font-display);
+}
+.ge-app-body {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+}
+@media (max-width: 700px) {
+  .ge-app-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.ge-app-side {
+  border-right: 1px solid var(--border);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+.ge-agent-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  display: grid;
+  gap: 2px;
+  background: var(--bg-sunken);
+}
+.ge-agent-card.is-active {
+  border-color: var(--c-user);
+  background: color-mix(in srgb, var(--c-user) 10%, var(--bg-elev));
+}
+.ge-agent-card .n {
+  font-weight: 600;
+}
+.ge-agent-card .d {
+  color: var(--text-3);
+  font-size: 12px;
+}
+.ge-app-chat {
+  padding: 14px;
+}
+.ge-card-lab {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 14px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .ge-card-lab {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.ge-field {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  border-radius: 10px;
+  padding: 8px 11px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13.5px;
+  margin-bottom: 6px;
+}
+.ge-field:hover {
+  border-color: var(--accent);
+}
+.ge-field.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.ge-field .req {
+  font-size: 11px;
+  color: var(--c-error);
+  margin-left: 6px;
+}
+.ge-field .opt {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-left: 6px;
+}
+.ge-field p {
+  margin: 6px 0 0;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.ge-a2a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 12px;
+}
+@media (max-width: 960px) {
+  .ge-a2a {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.ge-bubble {
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--tone) 12%, var(--bg-elev));
+  border: 1px solid color-mix(in srgb, var(--tone) 35%, transparent);
+  font-size: 14px;
+}
+
+.ge-break {
+  word-break: break-all;
+}
