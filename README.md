@@ -14,11 +14,11 @@ Los comandos, APIs, nombres de productos, formatos y precios son **reales** (ver
 | 2 · Construir con ADK | Tu primer agente · Herramientas (funciones, MCP, confirmación) · Bases de datos dentro y fuera de Google (MCP Toolbox) · Multi-agente y workflows |
 | 3 · Escalar | Sesiones, estado y Memory Bank · Desplegar en Agent Runtime |
 | 4 · Gobernar y optimizar | Seguridad (Model Armor, Agent Identity, Gateway) · Evaluar y observar |
-| 5 · Publicar | Gemini Enterprise y A2A · El proyecto completo |
+| 5 · Publicar | Gemini Enterprise y A2A · Integrar en tu propia app (chat, botón, evento) · El proyecto completo |
 
 ## Código para probar
 
-[`examples/`](examples/README.md) tiene cuatro agentes ADK completos (Python ≥ 3.11): `andes_hello`, `andes_data` (MCP Toolbox + Docker con dos Postgres + servidor MCP del transportista), `andes_workflow` (coordinador y grafo con humano en el circuito) y `andes_prod` (plugins, Memory Bank, despliegue, consulta remota, evalset, A2A, registro en Gemini Enterprise).
+[`examples/`](examples/README.md) tiene cuatro agentes ADK completos (Python ≥ 3.11): `andes_hello`, `andes_data` (MCP Toolbox + Docker con dos Postgres + servidor MCP del transportista), `andes_workflow` (coordinador y grafo con humano en el circuito) y `andes_prod` (plugins, Memory Bank, despliegue, consulta remota, evalset, A2A, registro en Gemini Enterprise), más `andes_portal`: el backend de un portal alojado fuera de Google (AWS) que consume el agente por chat SSE, botón y eventos, con Workload Identity Federation.
 
 ## Desarrollo del sitio
 

@@ -3,7 +3,7 @@ import type { LessonMeta } from '../types'
 export const meta: LessonMeta = {
   slug: 'proyecto-completo',
   module: 'publicar',
-  order: 2,
+  order: 3,
   title: 'El proyecto completo: del repositorio a producción',
   short: 'Proyecto completo',
   summary:

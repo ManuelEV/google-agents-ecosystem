@@ -14,10 +14,14 @@ dependencies = [
   "pytest>=8",
   "pytest-asyncio>=0.24",
   "python-dotenv>=1.0",
+  # backend del portal (andes_portal): FastAPI + google-auth/requests para la REST API desde fuera de Google
+  "fastapi>=0.115",
+  "google-auth>=2.35",
+  "requests>=2.32",
 ]
 
 [tool.setuptools]
-packages = ["andes_hello", "andes_data", "andes_workflow", "andes_prod", "andes_common"]
+packages = ["andes_hello", "andes_data", "andes_workflow", "andes_prod", "andes_portal", "andes_common"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

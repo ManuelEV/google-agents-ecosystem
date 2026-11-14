@@ -421,8 +421,8 @@ export default function Lesson() {
 
       <Section n={5} title="Lo que agregamos a la arquitectura">
         <p>
-          Con Gemini Enterprise al frente y el agente de logística conectado por A2A, la arquitectura está completa. En la última lección la recorres de
-          punta a punta con el código del repositorio.
+          Con Gemini Enterprise al frente y el agente de logística conectado por A2A, la arquitectura para empleados está completa. En la próxima lección
+          le sumas la puerta para tus propias apps (un portal en otra nube) y en la última la recorres de punta a punta con el código del repositorio.
         </p>
         <ArchDiagram stage={8} />
         <Panel title="Resumen de la ruta" tone="user">

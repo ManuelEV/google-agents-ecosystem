@@ -1,4 +1,4 @@
-import { Bot, Boxes, Brain, Cloud, Database, Eye, Fingerprint, GitBranch, Layers, Network, Plug, Server, ShieldCheck, User, UserCheck, Wrench } from 'lucide-react'
+import { Bot, Boxes, Brain, Cloud, Database, Eye, Fingerprint, GitBranch, Globe, Layers, Network, Plug, Server, ShieldCheck, User, UserCheck, Wrench } from 'lucide-react'
 import type { FlowEdge, FlowNode } from '../components/Flow'
 
 /* Arquitectura objetivo del tutorial. Cada nodo tiene una `stage`: la lección
@@ -11,7 +11,8 @@ import type { FlowEdge, FlowNode } from '../components/Flow'
    stage 5  despliegue en Agent Runtime
    stage 6  gobierno: Model Armor, Agent Identity, Gateway/Registry
    stage 7  evaluación + observabilidad
-   stage 8  Gemini Enterprise + A2A */
+   stage 8  Gemini Enterprise + A2A
+   stage 9  integrado en una app propia fuera de Google (portal en AWS) */
 
 export type ArchNode = FlowNode & { stage: number; lesson?: string; where: 'google' | 'outside' | 'local' }
 
@@ -40,6 +41,7 @@ export const ARCH_NODES: ArchNode[] = [
   { id: 'gateway', x: 250, y: 60, w: 140, label: 'Agent Gateway', sub: '+ Registry', tone: 'guard', icon: ShieldCheck, stage: 6, where: 'google', lesson: 'seguridad' },
   { id: 'trace', x: 80, y: 430, w: 130, label: 'Cloud Trace', sub: 'eval + OTel', tone: 'tool', icon: Eye, stage: 7, where: 'google', lesson: 'evaluar' },
   { id: 'a2a', x: 80, y: 20, w: 130, h: 56, label: 'Agente logística', sub: 'otro equipo · A2A', tone: 'tool', icon: Network, stage: 8, where: 'outside', lesson: 'gemini-enterprise' },
+  { id: 'portal', x: 80, y: 358, w: 130, h: 56, label: 'Portal soporte', sub: 'tu app · AWS', tone: 'user', icon: Globe, stage: 9, where: 'outside', lesson: 'integrar' },
 ]
 
 export const ARCH_EDGES: (FlowEdge & { stage: number })[] = [
@@ -63,6 +65,7 @@ export const ARCH_EDGES: (FlowEdge & { stage: number })[] = [
   { from: 'root', to: 'trace', stage: 7, dashed: true, curve: -60 },
   { from: 'ge', to: 'root', stage: 8, curve: -30 },
   { from: 'root', to: 'a2a', stage: 8, dashed: true, curve: 80 },
+  { from: 'portal', to: 'armor', stage: 9, curve: 12 },
 ]
 
 export const ARCH_STAGES: { stage: number; title: string; lesson: string }[] = [
@@ -74,4 +77,5 @@ export const ARCH_STAGES: { stage: number; title: string; lesson: string }[] = [
   { stage: 6, title: 'Model Armor, identidad y gateway', lesson: 'seguridad' },
   { stage: 7, title: 'Evaluación y trazas', lesson: 'evaluar' },
   { stage: 8, title: 'Publicado en Gemini Enterprise + A2A', lesson: 'gemini-enterprise' },
+  { stage: 9, title: 'Integrado en tu propia app (chat, botón, evento)', lesson: 'integrar' },
 ]

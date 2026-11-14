@@ -85,6 +85,8 @@ export const REPO: RepoFile[] = [
   { path: 'examples/andes_prod/evals/andes_ops.evalset.json', what: 'Tres casos con tool_uses y final_response; test_config.json con los criterios; tests/test_eval.py para pytest.', lesson: 'evaluar' },
   { path: 'examples/andes_prod/a2a_server.py', what: 'to_a2a(root_agent, agent_card=…) y logistics_remote.py con RemoteA2aAgent.', lesson: 'gemini-enterprise' },
   { path: 'examples/andes_prod/register_gemini_enterprise.sh', what: 'POST a Discovery Engine v1alpha con adkAgentDefinition.provisionedReasoningEngine.', lesson: 'gemini-enterprise' },
+  { path: 'examples/andes_portal/backend.py', what: 'FastAPI fuera de Google: /chat (SSE, sesión persistente), /tickets/{id}/summary (ask_once) y /events/shipment-delayed (principal de sistema). widget.js consume el stream.', lesson: 'integrar' },
+  { path: 'examples/andes_portal/lambda_handler.py', what: 'Lambda de EventBridge que llama a :streamQuery por REST con google-auth; wif_setup.sh crea el pool de Workload Identity Federation (sin llaves).', lesson: 'integrar' },
   { path: 'examples/scripts/run_local.py', what: 'Runner + InMemorySessionService: imprime function_call / function_response / state_delta de cualquier agente.', lesson: 'primer-agente' },
 ]
 

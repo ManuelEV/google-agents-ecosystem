@@ -16,7 +16,7 @@ Stack: React 19 + Vite 8 + TypeScript 7 + React Router 8 (pnpm). **Sin librería
 - Nombres: usa los actuales (Gemini Enterprise Agent Platform, Agent Runtime, Gemini Enterprise) y menciona el anterior la primera vez entre paréntesis ("Agent Runtime (antes Agent Engine)").
 - Modelos de los ejemplos: `gemini-4-hydrogen` (raíz/orquestador), `gemini-3.8-flash` (especialistas), `gemini-3.5-flash-lite` (routers/jueces). Exportados en `src/sim/models.ts` como `MODEL_ROOT`, `MODEL_WORKER`, `MODEL_LITE`.
 - Escenario: **Andes Market** (retail chileno ficticio) y su agente **Andi** (`andes_ops`); cliente Camila Rojas (`cus_7781`); pedidos 4821 (en ruta), 5102 (preparando), 4790 (entregado). Todo en `src/sim/scenario.ts`. Reutilízalo para que el tutorial cuente una sola historia.
-- El código mostrado debe coincidir con `examples/` (andes_hello, andes_data, andes_workflow, andes_prod). Cita la ruta del archivo en el `title` del `<Code>`: `title="examples/andes_hello/agent.py"`.
+- El código mostrado debe coincidir con `examples/` (andes_hello, andes_data, andes_workflow, andes_prod, andes_portal). Cita la ruta del archivo en el `title` del `<Code>`: `title="examples/andes_hello/agent.py"`.
 
 ## Archivos de una lección
 
@@ -49,7 +49,8 @@ La cabecera (título, resumen, chips, navegación) la genera `LessonPage`. Tu co
 | 10 | `seguridad` | gobernar | 6 | callbacks vs plugins, Model Armor, Agent Identity, Gateway/Registry |
 | 11 | `evaluar` | gobernar | 7 | evalset, adk eval, criterios, Cloud Trace |
 | 12 | `gemini-enterprise` | publicar | 8 | registrar en Gemini Enterprise (consola + REST), A2A |
-| 13 | `proyecto-completo` | publicar | – | recorrido del repo examples/, arquitectura completa, checklist de producción |
+| 13 | `integrar` | publicar | 9 | integrar desde tu propia app (chat SSE, botón, evento), WIF desde AWS, formas de orquestar, qué gobernanza sigue aplicando |
+| 14 | `proyecto-completo` | publicar | – | recorrido del repo examples/, arquitectura completa, checklist de producción |
 
 ## Estructura recomendada
 
